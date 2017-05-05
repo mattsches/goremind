@@ -11,10 +11,10 @@
 Examples:
 
 ```bash
-$ goremind me in 10 minutes to take a break
-Okay, I will remind you at 2017-05-05 00:15 to take a break
+$ goremind me to take a break in 10 minutes
+Okay, I will remind you to take a break at 2017-05-05 00:15
 $ goremind me tomorrow at 8am to make coffee
-Okay, I will remind you at 2017-05-06 08:00 to make coffee
+Okay, I will remind you to make coffee at 2017-05-06 08:00
 ```
 
 ## Limitations

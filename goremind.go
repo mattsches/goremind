@@ -15,24 +15,22 @@ import (
 )
 
 const (
+	Icon = "/usr/share/icons/gnome/48x48/status/appointment-soon.png"
 	Me = "me"
 )
 
-func parseMessage(args []string) (string, string) {
-	for idx, element := range args {
-		if strings.Compare(element, "to") == 0 {
-			body := args[idx+1:]
-			return strings.Join(body, " "), "to"
-		}
-		if strings.Compare(element, "that") == 0 {
-			body := args[idx+1:]
-			return strings.Join(body, " "), "that"
-		}
+func parseMessage(sentence string, timeText string) (string, string) {
+	body := strings.TrimSpace(strings.Replace(sentence, timeText, "", 1))
+	if strings.HasPrefix(body, "to ") {
+		return strings.Replace(body, "to ", "", 1), "to"
 	}
-	return "", ""
+	if strings.HasPrefix(body, "that ") {
+		return strings.Replace(body, "that ", "", 1), "that"
+	}
+	return body, ""
 }
 
-func parseTime(text string) time.Time {
+func parseTime(text string) *when.Result {
 	w := when.New(nil)
 	w.Add(en.All...)
 	w.Add(common.All...)
@@ -43,17 +41,20 @@ func parseTime(text string) time.Time {
 	}
 	if r == nil {
 		fmt.Println("Could not parse time and date, fall back to default (now + 1 hour)")
-		return time.Now().Add(time.Hour)
+		r := new(when.Result)
+		r.Time = time.Now().Add(time.Hour)
+		return r
 	}
-	return r.Time
+	return r
 }
 
 func notifyShell(args []string) {
-	parsedTime := parseTime(strings.Join(args, " "))
-	todo, word := parseMessage(args)
+	sentence := strings.Join(args, " ")
+	parsedTime := parseTime(sentence)
+	todo, word := parseMessage(sentence, parsedTime.Text)
 	// https://stackoverflow.com/questions/10781516/how-to-pipe-several-commands-in-go
-	echo := exec.Command("echo", "notify-send", "-i", "/usr/share/icons/gnome/48x48/status/appointment-soon.png", "'"+strings.Title(todo)+"'", "'… your friendly GoReminder'")
-	at := exec.Command("at", parsedTime.Format("15:04 02.01.06"))
+	echo := exec.Command("echo", "notify-send", "-i", Icon, "'"+strings.Title(todo)+"'", "'… your friendly GoReminder'")
+	at := exec.Command("at", parsedTime.Time.Format("15:04 02.01.06"))
 	read, write := io.Pipe()
 	echo.Stdout = write
 	at.Stdin = read
@@ -65,7 +66,7 @@ func notifyShell(args []string) {
 	write.Close()
 	echo.Wait()
 	io.Copy(os.Stdout, &b2)
-	fmt.Println("Okay, I will remind you at " + parsedTime.Format("2006-01-02 15:04") + " " + word + " " + todo)
+	fmt.Println("Okay, I will remind you " + word + " " + todo + " at " + parsedTime.Time.Format("2006-01-02 15:04"))
 }
 
 func main() {
