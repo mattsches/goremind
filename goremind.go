@@ -1,60 +1,25 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
-	"github.com/olebedev/when"
-	"github.com/olebedev/when/rules/common"
-	"github.com/olebedev/when/rules/en"
-	"io"
 	"os"
-	"os/exec"
 	"strings"
-	"time"
+	"github.com/mattsches/goremind/parser"
+	"os/exec"
+	"io"
+	"bytes"
 )
 
 const (
 	Icon = "/usr/share/icons/gnome/48x48/status/appointment-soon.png"
-	Me = "me"
+	Me   = "me"
 )
 
-func parseMessage(sentence string, timeText string) (string, string) {
-	body := strings.TrimSpace(strings.Replace(sentence, timeText, "", 1))
-	if strings.HasPrefix(body, "to ") {
-		return strings.Replace(body, "to ", "", 1), "to"
-	}
-	if strings.HasPrefix(body, "that ") {
-		return strings.Replace(body, "that ", "", 1), "that"
-	}
-	return body, ""
-}
-
-func parseTime(text string) *when.Result {
-	w := when.New(nil)
-	w.Add(en.All...)
-	w.Add(common.All...)
-	r, err := w.Parse(text, time.Now())
-	if err != nil {
-		fmt.Println("An error has occurred :-(")
-		os.Exit(1)
-	}
-	if r == nil {
-		fmt.Println("Could not parse time and date, fall back to default (now + 1 hour)")
-		r := new(when.Result)
-		r.Time = time.Now().Add(time.Hour)
-		return r
-	}
-	return r
-}
-
-func notifyShell(args []string) {
-	sentence := strings.Join(args, " ")
-	parsedTime := parseTime(sentence)
-	todo, word := parseMessage(sentence, parsedTime.Text)
-	// https://stackoverflow.com/questions/10781516/how-to-pipe-several-commands-in-go
-	echo := exec.Command("echo", "notify-send", "-i", Icon, "'"+strings.Title(todo)+"'", "'… your friendly GoReminder'")
-	at := exec.Command("at", parsedTime.Time.Format("15:04 02.01.06"))
+// https://stackoverflow.com/questions/10781516/how-to-pipe-several-commands-in-go
+func notifyShell(r *parser.Reminder) {
+	echo := exec.Command("echo", "notify-send", "-i", Icon, "'"+strings.Title(r.Body)+"'", "'… your friendly GoReminder'")
+	at := exec.Command("at", r.WhenResult.Time.Format("15:04 02.01.06"))
 	read, write := io.Pipe()
 	echo.Stdout = write
 	at.Stdin = read
@@ -66,7 +31,7 @@ func notifyShell(args []string) {
 	write.Close()
 	echo.Wait()
 	io.Copy(os.Stdout, &b2)
-	fmt.Println("Okay, I will remind you " + word + " " + todo + " at " + parsedTime.Time.Format("2006-01-02 15:04"))
+	fmt.Println("Okay, I will remind you " + r.Preposition + " \"" + r.Body + "\" at " + r.WhenResult.Time.Format("2006-01-02 15:04"))
 }
 
 func main() {
@@ -83,6 +48,6 @@ func main() {
 		os.Exit(1)
 	}
 	if meCommand.Parsed() {
-		notifyShell(meCommand.Args())
+		notifyShell(parser.Message(parser.Time(strings.Join(meCommand.Args(), " "))))
 	}
 }
