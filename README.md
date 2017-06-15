@@ -15,6 +15,8 @@ $ goremind me to take a break in 10 minutes
 Okay, I will remind you to take a break at 2017-05-05 00:15
 $ goremind me tomorrow at 8am to make coffee
 Okay, I will remind you to make coffee at 2017-05-06 08:00
+$ goremind list
+list me, baby #this command is currently useless
 ```
 
 ## Limitations
