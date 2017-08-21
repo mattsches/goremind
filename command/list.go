@@ -2,6 +2,7 @@ package command
 
 import "fmt"
 
-func List () {
+// List currently does nothing
+func List() {
 	fmt.Println("list me, baby")
 }

@@ -1,22 +1,23 @@
 package command
 
 import (
-	"os/exec"
-	"strings"
-	"io"
 	"bytes"
-	"os"
 	"fmt"
 	"github.com/mattsches/goremind/parser"
+	"io"
+	"os"
+	"os/exec"
+	"strings"
 )
 
 const (
-	Icon = "/usr/share/icons/gnome/48x48/status/appointment-soon.png"
+	Icon = "/usr/share/icons/gnome/48x48/status/appointment-soon.png" // Icon to displayed alongside the reminder
 )
 
+// Me takes the Reminder and passes it on the the system
 // https://stackoverflow.com/questions/10781516/how-to-pipe-several-commands-in-go
 func Me(r *parser.Reminder) {
-	if r.Body == ""{
+	if r.Body == "" {
 		fmt.Println("Empty reminder body, aborting!")
 		os.Exit(1)
 	}

@@ -3,16 +3,16 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
-	"strings"
-	"github.com/mattsches/goremind/parser"
 	"github.com/mattsches/goremind/command"
+	"github.com/mattsches/goremind/parser"
+	"os"
 	"os/exec"
+	"strings"
 )
 
 const (
-	Me   = "me"
-	List = "list"
+	Me   = "me"   // Me command
+	List = "list" // List command
 )
 
 func checkExesExist(exes []string) {
